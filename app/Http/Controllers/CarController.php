@@ -7,73 +7,52 @@ use Illuminate\Http\Request;
 
 class CarController extends Controller
 {
-    public function index()
-    {
-        $cars = Car::all();
-
-        return view('car.index', ['cars' => $cars]);
+    public function index() {
+        $cars = Car::orderBy('id')->get();
+        return response()->json($cars);
     }
 
-    public function create()
-    {
-        return view('car.create');
+    public function view(Car $car) {
+        return response()->json($car);
     }
 
-    public function edit($id)
-    {
-        $car = Car::find($id);
-
-        return view('car.edit', ['car' => $car]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
+    public function store(Request $request) {
+        // Validate the request data
+        $fields = $request->validate([
             'brand' => 'required',
             'horse_power' => 'required',
-
         ]);
 
-        $car = Car::find($id);
+        // Create a new student record using the Student model
+        $car = Car::create($fields);
 
-        $car->update([
-            'brand' => $request->input('brand'),
-            'horse_power' => $request->input('horse_power'),
-
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'New Car created with the ID# ' . $car->id
         ]);
-
-        return redirect('car/index')->with('success', 'Car updated successfully!');
     }
 
-    public function store(Request $request)
-    {
-        // Validation
-        $request->validate([
+    public function update(Request $request, Car $car) {
+        $fields = $request->validate([
             'brand' => 'required',
             'horse_power' => 'required',
-
         ]);
 
-        // Create a new car
-        Car::create([
-            'brand' => $request->input('brand'),
-            'horse_power' => $request->input('horse_power'),
+        $car->update($fields);
 
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'Car with ID# ' . $car->id . ' has been updated.'
         ]);
-
-        return redirect('car/index')->with('success', 'Car added successfully!');
     }
 
-    public function delete($id)
-    {
-        $car = Car::find($id);
-
-        if (!$car) {
-            return redirect('car/index')->with('error', 'Car not found!');
-        }
-
+    public function destroy(Car $car) {
+        $details = $car->brand.", ".$car->horse_power;
         $car->delete();
 
-        return redirect('car/index')->with('success', 'Car deleted successfully!');
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'The job '. $details.  ' has been deleted.'
+        ]);
     }
 }

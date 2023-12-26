@@ -7,73 +7,54 @@ use Illuminate\Http\Request;
 
 class ParkingLotController extends Controller
 {
-    public function index(){
-        $parkinglots = ParkingLot::all();
-
-       return view('parkinglot.show',['parkinglots' => $parkinglots]);
-   }
-
-
-    public function create()
-    {
-
-        return view('parkinglot.create');
+    public function index() {
+        $parkinglots = ParkingLot::orderBy('id')->get();
+        return response()->json($parkinglots);
     }
-    public function edit($id){
 
-        $parkinglot = ParkingLot::find($id);
-        return view('parkinglot.edit', ['parkinglot'=>$parkinglot]);
-
+    public function view(ParkingLot $parkinglot) {
+        return response()->json($parkinglot);
     }
-    public function update(Request $request, $id){
-        $request->validate([
+
+    public function store(Request $request) {
+        // Validate the request data
+        $fields = $request->validate([
             'name' => 'required',
             'location' => 'required',
-            'capacity' => 'required|numeric',
+            'capacity' => 'required',
         ]);
 
-        $parkinglot = ParkingLot::find($id);
+        // Create a new student record using the Student model
+        $parkinglot = ParkingLot::create($fields);
 
-        $parkinglot -> update([
-        'name' => $request->input('name'),
-        'location' => $request->input('location'),
-        'capacity' => $request->input('capacity'),
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'New parkinglot created with the ID# ' . $parkinglot->id
         ]);
-
-        return redirect('parkinglot/show')->with('success', 'Parking lot updated successfully1');
-
-
     }
-    public function store(Request $request)
-    {
-        // Validation
-        $request->validate([
+
+    public function update(Request $request, ParkingLot $parkinglot) {
+        $fields = $request->validate([
             'name' => 'required',
             'location' => 'required',
-            'capacity' => 'required|numeric',
+            'capacity' => 'required',
         ]);
 
-        // Create a new parking lot
-        ParkingLot::create([
-            'name' => $request->input('name'),
-            'location' => $request->input('location'),
-            'capacity' => $request->input('capacity'),
+        $parkinglot->update($fields);
 
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'Parkinglot with ID# ' . $parkinglot->id . ' has been updated.'
         ]);
-
-        return redirect('parkinglot/show')->with('success', 'Parkinglot added successfully!');
     }
 
-    public function delete($id)
-    {
-        $parkinglot = ParkingLot::find($id);
-
-        if (!$parkinglot) {
-            return redirect('parkinglot/show')->with('error', 'Parking Lot not found!');
-        }
-
+    public function destroy(ParkingLot $parkinglot) {
+        $details = $parkinglot->name.", ".$parkinglot->location;
         $parkinglot->delete();
 
-        return redirect('parkinglot/show')->with('success', 'Parking Lot deleted successfully!');
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'The job '. $details.  ' has been deleted.'
+        ]);
     }
 }

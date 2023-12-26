@@ -7,74 +7,52 @@ use Illuminate\Http\Request;
 
 class MotorcycleController extends Controller
 {
-    public function index()
-    {
-        $motorcycles = Motorcycle::all();
-
-        return view('motorcycle.index', ['motorcycles' => $motorcycles]);
+    public function index() {
+        $motorcycles = Motorcycle::orderBy('id')->get();
+        return response()->json($motorcycles);
     }
 
-    public function create()
-    {
-        return view('motorcycle.create');
+    public function view(Motorcycle $motorcycle) {
+        return response()->json($motorcycle);
     }
 
-    public function edit($id)
-    {
-        $motorcycle = Motorcycle::find($id);
-
-        return view('motorcycle.edit', ['motorcycle' => $motorcycle]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
+    public function store(Request $request) {
+        // Validate the request data
+        $fields = $request->validate([
             'vehicle_model' => 'required',
             'engine_size' => 'required',
-
-
         ]);
 
-        $motorcycle = Motorcycle::find($id);
+        // Create a new student record using the Student model
+        $motorcycle = Motorcycle::create($fields);
 
-        $motorcycle->update([
-            'vehicle_model' => $request->input('vehicle_model'),
-            'engine_size' => $request->input('engine_size'),
-
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'New Motorcycle created with the ID# ' . $motorcycle->id
         ]);
-
-        return redirect('motorcycle/index')->with('success', 'Motorcycle updated successfully!');
     }
 
-    public function store(Request $request)
-    {
-        // Validation
-        $request->validate([
+    public function update(Request $request, Motorcycle $motorcycle) {
+        $fields = $request->validate([
             'vehicle_model' => 'required',
             'engine_size' => 'required',
-
         ]);
 
-        // Create a new motorcycle
-        Motorcycle::create([
-            'vehicle_model' => $request->input('vehicle_model'),
-            'engine_size' => $request->input('engine_size'),
+        $motorcycle->update($fields);
 
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'Motorcycle with ID# ' . $motorcycle->id . ' has been updated.'
         ]);
-
-        return redirect('motorcycle/index')->with('success', 'Motorcycle added successfully!');
     }
 
-    public function delete($id)
-    {
-        $motorcycle = Motorcycle::find($id);
-
-        if (!$motorcycle) {
-            return redirect('motorcycle/index')->with('error', 'Motorcycle not found!');
-        }
-
+    public function destroy(Motorcycle $motorcycle) {
+        $details = $motorcycle->name.", ".$motorcycle->location;
         $motorcycle->delete();
 
-        return redirect('motorcycle/index')->with('success', 'Motorcycle deleted successfully!');
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'The job '. $details.  ' has been deleted.'
+        ]);
     }
 }
